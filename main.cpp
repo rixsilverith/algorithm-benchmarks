@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <climits>
 #include <chrono>
+#include <fstream>
+#include <cassert>
 
 #define NARGS 12
 
@@ -181,6 +183,25 @@ BenchmarkParameters ComputeBenchmarkParameters(BenchmarkOptions& bench_options, 
     return bench_parameters;
 }
 
+void DumpBenchmarkParametersToFile(char *filename, std::vector<BenchmarkParameters> resulting_params) {
+    std::ofstream dumpfile;
+    dumpfile.open(filename);
+    if (!dumpfile) {
+        std::cerr << "error opening dump file" << std::endl;
+        exit(-1);
+    }
+
+    for (auto bench_params : resulting_params) {
+        dumpfile << bench_params.permutation_size << " "
+                 << bench_params.avg_execution_time << " "
+                 << bench_params.avg_performed_bops << " "
+                 << bench_params.min_performed_bops << " "
+                 << bench_params.max_performed_bops << std::endl;
+    }
+
+    dumpfile.close();
+}
+
 void Run(BenchmarkOptions& bench_options) {
     unsigned int n_iterations = (bench_options.max_permutation_size - bench_options.min_permutation_size)
                               / bench_options.delta_permutation_size + 1;
@@ -202,6 +223,8 @@ void Run(BenchmarkOptions& bench_options) {
     for (int i = 0; i < n_iterations; i++)
         resulting_parameters.push_back(ComputeBenchmarkParameters(bench_options, 
             bench_options.min_permutation_size + bench_options.delta_permutation_size * i));
+
+    DumpBenchmarkParametersToFile(bench_options.dump_file, resulting_parameters);
 }
 
 }
