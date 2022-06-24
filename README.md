@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/github/license/rixsilverith/algorithm-benchmarks)](https://mit-license.org/)
+
 # Benchmarks for classical sorting and search algorithms
 
 This tool performs benchmarks for some classical sorting and search algorithms taught in almost every 
