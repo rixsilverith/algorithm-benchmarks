@@ -1,12 +1,17 @@
 #include <iostream>
+#include <iterator>
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <random>
 #include <stdexcept>
 
 #define NARGS 12
 
 namespace benchmark {
+
+using Permutation = std::vector<unsigned int>;
 
 struct BenchmarkOptions {
     char method_name[256];
@@ -30,6 +35,39 @@ struct BenchmarkParameters {
 void Usage() {
     std::cerr << "usage: benchmark <options>" << std::endl;
     exit(-1);
+}
+
+unsigned int GenerateRandomNumber(unsigned int inf, unsigned int sup) {
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(inf, sup);
+
+    return dist(rng);
+}
+
+Permutation FisherYatesShuffle(size_t permutation_size) {
+    Permutation perm(permutation_size);
+
+    std::iota(perm.begin(), perm.end(), 1);
+
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::shuffle(perm.begin(), perm.end(), rng);
+
+    std::cout << "[debug] generated random permutation: ";
+    std::copy(perm.begin(), perm.end(), std::ostream_iterator<unsigned int>(std::cout, " "));
+    std::cout << std::endl;
+
+    return perm;
+}
+
+std::vector<Permutation> GenerateRandomPermutations(unsigned int n, size_t permutation_size) {
+    std::vector<Permutation> permutations(n);
+
+    for (int i = 0; i < n; i++) 
+        permutations.emplace_back(FisherYatesShuffle(permutation_size));
+
+    return permutations;
 }
 
 void ProcessBenchmarkOptions(BenchmarkOptions& bench_options, char **argv, int argc) {
@@ -65,6 +103,8 @@ void Run(BenchmarkOptions& bench_options) {
     std::cout << "n_iterations: " << n_iterations << std::endl;
     std::cout << "delta_permutation_size: " << bench_options.delta_permutation_size << std::endl;
     std::cout << "dump_file: " << bench_options.dump_file << std::endl;
+
+    std::vector<Permutation> perms = GenerateRandomPermutations(15, 6);
 }
 
 }
