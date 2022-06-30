@@ -10,7 +10,7 @@ complexity of those algorithms.
 
 ## Overview
 
-For the empirical analysis and computational complexity estimation of the algorithms, the benchmarks 
+For the empirical analysis and computational time complexity estimation of the algorithms, the benchmarks 
 keep track of the number of times the basic operation (BO) of the corresponding algorithm is performed
 over the given input.
 
@@ -26,9 +26,18 @@ clock execution time of the algorithm over the given input.
 The benchmarking tool can be used as
 
 ```bash
-$ ./benchmark --method <name> --min-permutation-size <int> --max-permutation-size <int> --n-permutations <int>
---delta-permutation-size <int> --dump-file <filename>
+$ ./benchmark <options>
 ```
+The following is a list of the available options in the tool.
+
+**Option** | **Description**
+--- | ---
+`--method <name>` | Specifies the method to be benchmarked.
+`--min-permutation-size <integer>` | Minimum permutation size to be tested.
+`--max-permutation-size <integer>` | Maximum permutation size to be tested.
+`--n-permutations <integer>` | Number of permutations used to compute the average benchmark parameters for a fixed permutation size.
+`--delta-permutation-size <integer>` | Increment in the size of the permutations in each iteration.
+`--dump-file <filepath>` | File to dump the benchmark data to be analised.
 
 ---
 
