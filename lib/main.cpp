@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <iomanip>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
@@ -17,47 +18,39 @@ namespace benchmark {
 
 using Permutation = std::vector<unsigned int>;
 
-typedef unsigned int (*benchmark_method)(Permutation, int, int);
+typedef unsigned int (*benchmark_method)(Permutation&, int, int);
 
-// test algorithm
-namespace mergesort {
-    int merge(Permutation permutation, int index_0, int index, int index_middle) {
-        Permutation aux(index + 1);
+namespace bubblesort {
 
-        for (int i = 0; i < index + 1; i++) aux.push_back(0);
-
+    unsigned int sort(Permutation& vector, int index_0, int index) {
         unsigned int performed_bops = 0;
+        bool swaped = true;
 
-        unsigned int i = index_0;
-        unsigned int j = index_middle + 1;
-        unsigned int k = index;
-
-        while (i <= index_middle && j <= index) {
-            if (permutation[i] < permutation[j]) aux[k++] = permutation[i++];
-            else aux[k++] = permutation[j++];
-            performed_bops++;
+        /* for (size_t i = index; swaped && i >= index_0 + 1; i--) {
+            swaped = false;
+            for (size_t j = index_0; j <= i - 1; j++) {
+                if (performed_bops++ && vector.at(j) > vector.at(j + 1)) {
+                    std::swap(vector.at(j), vector.at(j + 1));
+                    swaped = true;
+                }
+            }
         }
 
-        if (i > index_middle) while (j <= index) aux[k++] = permutation[j++];
-        else if (j > index) while (i <= index_middle) aux[k++] = permutation[i++];
+        return performed_bops;*/
 
-        for (i = index_0; i <= index; i++) permutation[i] = aux[i];
-
+        for (size_t i = 0; swaped && i < vector.size() - 1; i++) {
+            swaped = false;
+            for (size_t j = 0; j < vector.size() - i - 1; j++) {
+                if (performed_bops++ && vector.at(j) > vector.at(j + 1)) {
+                    std::swap(vector.at(j), vector.at(j + 1));
+                    swaped = true;
+                }
+            }
+        }
+    
         return performed_bops;
     }
 
-    unsigned int sort(Permutation permutation, int index_0, int index) {
-        if (index_0 == index) return 0;
-
-        int index_middle = (index + index_0) / 2;
-
-        int performed_bops = 0;
-        performed_bops += sort(permutation, index_0, index_middle);
-        performed_bops += sort(permutation, index_middle + 1, index);
-        performed_bops += merge(permutation, index_0, index, index_middle);
-
-        return performed_bops;
-    }
 }
 
 struct BenchmarkOptions {
@@ -95,7 +88,6 @@ unsigned int GenerateRandomNumber(unsigned int inf, unsigned int sup) {
 
 Permutation FisherYatesShuffle(size_t permutation_size) {
     Permutation perm(permutation_size);
-
     std::iota(perm.begin(), perm.end(), 1);
 
     std::random_device rd;
@@ -112,9 +104,13 @@ Permutation FisherYatesShuffle(size_t permutation_size) {
 }
 
 std::vector<Permutation> GenerateRandomPermutations(unsigned int n, size_t permutation_size) {
-    std::vector<Permutation> permutations(n);
+    std::vector<Permutation> permutations{};
 
-    for (int i = 0; i < n; i++) 
+    #ifdef DEBUG
+    std::cout << "[debug] generating " << n << " random permutations of size " << permutation_size << std::endl;
+    #endif
+
+    for (int i = 0; i < n; i++)
         permutations.emplace_back(FisherYatesShuffle(permutation_size));
 
     return permutations;
@@ -141,6 +137,8 @@ void ProcessBenchmarkOptions(BenchmarkOptions& bench_options, char **argv, int a
 }
 
 BenchmarkParameters ComputeBenchmarkParameters(BenchmarkOptions& bench_options, unsigned int perm_size) {
+    assert(perm_size > 0);
+
     BenchmarkParameters bench_parameters{};
 
     bench_parameters.permutation_size = perm_size;
@@ -149,13 +147,12 @@ BenchmarkParameters ComputeBenchmarkParameters(BenchmarkOptions& bench_options, 
 
     std::vector<Permutation> permutations = GenerateRandomPermutations(bench_options.n_permutations, perm_size);
 
-    double iteration_execution_time = 0;
-    unsigned int performed_bops = 0, total_performed_bops = 0, total_execution_time = 0;
+    double iteration_execution_time = 0, total_execution_time = 0;
+    unsigned int performed_bops = 0, total_performed_bops = 0;
 
     for (int i = 0; i < bench_options.n_permutations; i++) {
         auto initial_execution_time = std::chrono::high_resolution_clock::now();
-        // performed_bops = bench_options.method(permutations[i], 0, perm_size - 1);
-        performed_bops = 30;
+        performed_bops = bench_options.method(permutations.at(i), 0, perm_size - 1);
         auto final_execution_time = std::chrono::high_resolution_clock::now();
 
         iteration_execution_time = 
@@ -174,9 +171,10 @@ BenchmarkParameters ComputeBenchmarkParameters(BenchmarkOptions& bench_options, 
     bench_parameters.avg_performed_bops = total_performed_bops / static_cast<double>(bench_options.n_permutations);
     bench_parameters.avg_execution_time = total_execution_time / static_cast<double>(bench_options.n_permutations);
 
+    std::cout << std::fixed << std::setprecision(9);
     std::cout << "perm_size: " << bench_parameters.permutation_size << ", "
-              << "avg_execution_time: " << bench_parameters.avg_execution_time << ", "
-              << "avg_bops: " << bench_parameters.avg_performed_bops << ", "
+              << "avg_execution_time (sec): " << bench_parameters.avg_execution_time << ", "
+              << "avg_bops: " << std::setprecision(3) << bench_parameters.avg_performed_bops << ", "
               << "min_bops: " << bench_parameters.min_performed_bops << ", "
               << "max_bops: " << bench_parameters.max_performed_bops << std::endl;
 
@@ -211,18 +209,24 @@ void Run(BenchmarkOptions& bench_options) {
     std::cout << "Running benchmark for <" << bench_options.method_name << "> method with options:" << std::endl;
     std::cout << "min_permutation_size: " << bench_options.min_permutation_size << std::endl;
     std::cout << "max_permutation_size: " << bench_options.max_permutation_size << std::endl;
-    std::cout << "n_permutations: " << bench_options.n_permutations << std::endl;
-    std::cout << "n_iterations: " << n_iterations << std::endl;
+    std::cout << "n_average_permutations: " << bench_options.n_permutations << std::endl;
+    std::cout << "n_benchmark_iterations: " << n_iterations << std::endl;
     std::cout << "delta_permutation_size: " << bench_options.delta_permutation_size << std::endl;
     std::cout << "dump_file: " << bench_options.dump_file << std::endl;
 
-    if (strcmp(bench_options.method_name, "mergesort") == 0)
-        bench_options.method = mergesort::sort;
+    if (strcmp(bench_options.method_name, "bubblesort") == 0)
+        bench_options.method = bubblesort::sort;
 
     std::cout << "Beginning benchmark" << std::endl;
-    for (int i = 0; i < n_iterations; i++)
+    for (int i = 0; i < n_iterations; i++) {
+        #ifdef DEBUG
+        std::cout << "[debug] running benchmark iteration " << i << " (perm_size: "
+                  << bench_options.min_permutation_size + bench_options.delta_permutation_size * i << ")" << std::endl;
+        #endif
+
         resulting_parameters.push_back(ComputeBenchmarkParameters(bench_options, 
             bench_options.min_permutation_size + bench_options.delta_permutation_size * i));
+    }
 
     DumpBenchmarkParametersToFile(bench_options.dump_file, resulting_parameters);
 }
