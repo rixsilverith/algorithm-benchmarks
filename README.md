@@ -1,4 +1,5 @@
 [![License](https://img.shields.io/github/license/rixsilverith/algorithm-benchmarks)](https://mit-license.org/)
+![Cpp Version](https://img.shields.io/badge/C%2B%2B-17-blue)
 
 # Benchmarks for classical sorting and search algorithms
 
@@ -40,6 +41,19 @@ The following is a list of the available options in the tool.
 `--dump-file <filepath>` | File to dump the benchmark data to be analised.
 
 ---
+
+## List of supported algorithms
+
+The following is a list of the supported algorithms with their corresponding computational
+time complexity. For the sake of completeness, the space complexity has also been included
+to distinguise in-place algorithms from those that need auxiliary memory.
+
+### Local sorting algorithms
+
+**Algorithm** | **Benchmark name** | **Worst time complexity** | **Average time complexity** | **Best time complexity** | **Space complexity**
+--- | --- | --- | --- | --- | ---
+Bubblesort (naive) | `naive-bubblesort` | $\mathcal{O}(n^2)$ | $\mathcal{O}(n^2)$ | $\mathcal{O}(n^2)$ | $\mathcal{O}(1)$
+Bubblesort | `bubblesort` | $\mathcal{O}(n^2)$ | $\mathcal{O}(n^2)$ | $\mathcal{O}(n)$ | $\mathcal{O}(1)$
 
 ## License
 
